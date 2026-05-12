@@ -3,69 +3,145 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:overScrollMode="ifContentScrolls">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingTop="8dp">
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/ruleSampleLayout"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/add_rule_sample_hint"
-            app:helperText="@string/add_rule_helper">
+            android:background="@drawable/bg_rule_dialog_section"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/ruleSampleInput"
+            <TextView
                 android:layout_width="match_parent"
-                android:layout_height="140dp"
-                android:gravity="top|start"
-                android:inputType="textCapSentences|textMultiLine"
-                android:minLines="5" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_height="wrap_content"
+                android:text="@string/add_rule_section_sample"
+                android:textColor="@android:color/white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:typeface="sans" />
 
-        <Button
-            android:id="@+id/extractTagsButton"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="14dp"
-            android:text="@string/extract_tags_button"
-            android:textAllCaps="false" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/add_rule_helper"
+                android:textColor="@color/dialog_text_secondary"
+                android:textSize="12sp" />
 
-        <TextView
-            android:id="@+id/tagHintText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/tag_hint_text"
-            android:textSize="13sp" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/ruleSampleLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:hint="@string/add_rule_sample_hint"
+                app:boxBackgroundColor="@color/dialog_input_surface"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxStrokeColor="@color/dialog_stroke"
+                app:boxStrokeWidth="1dp"
+                app:boxStrokeWidthFocused="2dp"
+                app:helperTextEnabled="false"
+                app:hintTextColor="@color/dialog_text_hint">
 
-        <TextView
-            android:id="@+id/tagSelectionHintText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/tag_selection_hint_text"
-            android:textSize="12sp"
-            android:visibility="gone" />
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/ruleSampleInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="136dp"
+                    android:gravity="top|start"
+                    android:inputType="textCapSentences|textMultiLine"
+                    android:minLines="5"
+                    android:textColor="@android:color/white"
+                    android:textColorHint="@color/dialog_text_hint"
+                    android:textSize="14sp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <com.example.parkingalert.widget.MaxHeightNestedScrollView
-            android:id="@+id/tagScrollView"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/extractTagsButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:letterSpacing="0.03"
+                android:text="@string/extract_tags_button"
+                android:textAllCaps="false"
+                android:textColor="@color/extract_button_text"
+                android:textStyle="bold"
+                app:backgroundTint="@color/signal_teal"
+                app:cornerRadius="16dp" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:overScrollMode="ifContentScrolls"
-            android:scrollbars="vertical"
-            android:visibility="gone">
+            android:background="@drawable/bg_rule_dialog_section"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <LinearLayout
-                android:id="@+id/candidateContainer"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
-        </com.example.parkingalert.widget.MaxHeightNestedScrollView>
+                android:text="@string/add_rule_section_tags"
+                android:textColor="@android:color/white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:typeface="sans" />
+
+            <TextView
+                android:id="@+id/tagHintText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/tag_hint_text"
+                android:textColor="@color/dialog_text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tagSelectionHintText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_rule_dialog_hint_pill"
+                android:paddingStart="10dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="6dp"
+                android:text="@string/tag_selection_hint_text"
+                android:textColor="@color/dialog_text_secondary"
+                android:textSize="11sp"
+                android:visibility="gone" />
+
+            <com.example.parkingalert.widget.MaxHeightNestedScrollView
+                android:id="@+id/tagScrollView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_rule_dialog_scroll"
+                android:clipToPadding="false"
+                android:overScrollMode="ifContentScrolls"
+                android:padding="8dp"
+                android:scrollbars="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/candidateContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </com.example.parkingalert.widget.MaxHeightNestedScrollView>
+        </LinearLayout>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

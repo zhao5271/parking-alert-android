@@ -26,10 +26,11 @@
     <string name="rule_keywords_fallback">等待补充关键词</string>
     <string name="rule_meta_builtin">系统规则 · %1$d 个匹配词</string>
     <string name="rule_meta_custom">%1$s 创建 · %2$d 个匹配词</string>
-    <string name="add_rule_dialog_title">生成短信匹配规则</string>
     <string name="add_rule_name_hint">规则名称（可选）</string>
     <string name="add_rule_sample_hint">粘贴短信正文</string>
     <string name="add_rule_helper">建议粘贴一整条违停提醒短信，提取效果更稳定。</string>
+    <string name="add_rule_section_sample">短信样本</string>
+    <string name="add_rule_section_tags">候选标签</string>
     <string name="extract_tags_button">提炼标签</string>
     <string name="tag_hint_text">先提炼候选规则项，再勾选、编辑后生成规则。</string>
     <string name="tag_selection_hint_text">已默认勾选可直接生成的标签，未勾选项是补充标签，按需再选。</string>

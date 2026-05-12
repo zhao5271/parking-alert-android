@@ -5,4 +5,20 @@
     <color name="signal_teal">#29FFD2</color>
     <color name="signal_teal_dark">#14C6A6</color>
     <color name="signal_alert">#FF6C5A</color>
+    <color name="dialog_section_start">#12212B</color>
+    <color name="dialog_section_end">#0E171E</color>
+    <color name="dialog_scroll_start">#0B151B</color>
+    <color name="dialog_scroll_end">#111F27</color>
+    <color name="dialog_input_surface">#162831</color>
+    <color name="dialog_stroke">#3A6975</color>
+    <color name="dialog_stroke_soft">#274450</color>
+    <color name="dialog_text_secondary">#A8BCC6</color>
+    <color name="dialog_text_hint">#6F8D98</color>
+    <color name="dialog_window_surface">#0C151B</color>
+    <color name="dialog_button_primary_start">#0E6E67</color>
+    <color name="dialog_button_primary_end">#149487</color>
+    <color name="dialog_button_primary_text">#F4FFFD</color>
+    <color name="dialog_button_secondary_text">#C6D8DE</color>
+    <color name="dialog_button_secondary_fill">#13232C</color>
+    <color name="extract_button_text">#06201C</color>
 </resources>

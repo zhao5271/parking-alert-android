@@ -1,7 +1,6 @@
 package com.example.parkingalert
 
 import android.Manifest
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -12,6 +11,7 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import com.example.parkingalert.databinding.ActivityMainBinding
@@ -203,8 +203,7 @@ class MainActivity : AppCompatActivity() {
         val dialogBinding = DialogAddRuleBinding.inflate(layoutInflater)
         configureTagListViewport(dialogBinding)
         val extractedCandidates = mutableListOf<RuleCandidateDraft>()
-        val dialog = MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.add_rule_dialog_title)
+        val dialog = MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_ParkingAlert_RuleDialog)
             .setView(dialogBinding.root)
             .setNegativeButton(android.R.string.cancel, null)
             .setPositiveButton(R.string.generate_rule_button, null)
@@ -236,6 +235,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         dialog.setOnShowListener {
+            styleAddRuleDialog(dialog)
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 dialogBinding.ruleSampleLayout.error = null
                 if (readCandidateDrafts(dialogBinding).isEmpty()) {
@@ -275,6 +275,26 @@ class MainActivity : AppCompatActivity() {
         }
 
         dialog.show()
+    }
+
+    private fun styleAddRuleDialog(dialog: AlertDialog) {
+        dialog.window?.setBackgroundDrawableResource(R.drawable.bg_rule_dialog_window)
+
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.apply {
+            isAllCaps = false
+            setTextColor(ContextCompat.getColor(context, R.color.dialog_button_secondary_text))
+            setBackgroundResource(R.drawable.bg_rule_dialog_action_secondary)
+            minHeight = resources.getDimensionPixelSize(R.dimen.rule_dialog_button_height)
+            minimumHeight = minHeight
+        }
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
+            isAllCaps = false
+            setTextColor(ContextCompat.getColor(context, R.color.dialog_button_primary_text))
+            setBackgroundResource(R.drawable.bg_rule_dialog_action_primary)
+            minHeight = resources.getDimensionPixelSize(R.dimen.rule_dialog_button_height)
+            minimumHeight = minHeight
+        }
     }
 
     private fun configureTagListViewport(dialogBinding: DialogAddRuleBinding) {

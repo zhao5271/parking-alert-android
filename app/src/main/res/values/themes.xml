@@ -9,4 +9,20 @@
         <item name="colorOnSurface">#F5F7FA</item>
         <item name="android:statusBarColor" tools:targetApi="l">@color/app_shell</item>
     </style>
+
+    <style name="ThemeOverlay.ParkingAlert.RuleDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="android:windowMinWidthMajor">92%</item>
+        <item name="android:windowMinWidthMinor">92%</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.ParkingAlert.RuleDialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.ParkingAlert.RuleDialogButton</item>
+    </style>
+
+    <style name="Widget.ParkingAlert.RuleDialogButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:minHeight">@dimen/rule_dialog_button_height</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:paddingLeft">18dp</item>
+        <item name="android:paddingRight">18dp</item>
+    </style>
 </resources>
