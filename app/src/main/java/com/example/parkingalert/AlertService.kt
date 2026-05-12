@@ -57,9 +57,10 @@ class AlertService : Service() {
         when (intent?.action) {
             ACTION_STOP -> stopSelfSafely()
             ACTION_START, null -> {
-                val message = intent?.getStringExtra(EXTRA_MESSAGE).orEmpty()
-                startForeground(NOTIFICATION_ID, buildNotification(message))
-                launchAlertScreen(message)
+                val payload = intent?.toAlertPayload()
+                val message = payload?.sourceMessage ?: intent?.getStringExtra(EXTRA_MESSAGE).orEmpty()
+                startForeground(NOTIFICATION_ID, buildNotification(payload, message))
+                launchAlertScreen(payload, message)
                 startAlarm()
                 startVibration()
                 startTorchBlink()
@@ -114,12 +115,13 @@ class AlertService : Service() {
         mediaPlayer = null
     }
 
-    private fun launchAlertScreen(message: String) {
+    private fun launchAlertScreen(payload: ReminderAlertPayload?, message: String) {
         val intent = Intent(this, AlertActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                 Intent.FLAG_ACTIVITY_SINGLE_TOP or
                 Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra(EXTRA_MESSAGE, message)
+            payload?.let { putAlertPayload(it) }
         }
         startActivity(intent)
     }
@@ -190,13 +192,17 @@ class AlertService : Service() {
         stopSelf()
     }
 
-    private fun buildNotification(message: String): android.app.Notification {
+    private fun buildNotification(
+        payload: ReminderAlertPayload?,
+        message: String,
+    ): android.app.Notification {
         val openAppIntent = PendingIntent.getActivity(
             this,
             1,
             Intent(this, AlertActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 putExtra(EXTRA_MESSAGE, message)
+                payload?.let { putAlertPayload(it) }
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -210,19 +216,20 @@ class AlertService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val preview = if (message.isBlank()) {
-            getString(R.string.alert_notification_text)
-        } else {
-            message.take(80)
-        }
+        val notificationTitle = payload?.title?.ifBlank {
+            getString(R.string.alert_notification_title)
+        } ?: getString(R.string.alert_notification_title)
+        val notificationBody = payload?.body?.ifBlank {
+            message.ifBlank { getString(R.string.alert_notification_text) }
+        } ?: message.ifBlank { getString(R.string.alert_notification_text) }
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_error)
-            .setContentTitle(getString(R.string.alert_notification_title))
-            .setContentText(preview)
+            .setContentTitle(notificationTitle)
+            .setContentText(notificationBody)
             .setStyle(
                 NotificationCompat.BigTextStyle().bigText(
-                    message.ifBlank { getString(R.string.alert_notification_text) },
+                    notificationBody,
                 ),
             )
             .setContentIntent(openAppIntent)

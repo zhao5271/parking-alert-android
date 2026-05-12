@@ -36,13 +36,18 @@ class SmsAlertReceiver : BroadcastReceiver() {
             ruleRepository = it
         }
 
-        if (!repository.getRules().any { it.matches(body) }) {
+        val matchedRule = repository.getRules().firstOrNull { it.matches(body) } ?: run {
             return
         }
+        val payload = ReminderCopyGenerator.generate(
+            messageBody = body,
+            matchedRuleName = matchedRule.name,
+        )
 
         val serviceIntent = Intent(context, AlertService::class.java).apply {
             action = AlertService.ACTION_START
             putExtra(AlertService.EXTRA_MESSAGE, body)
+            putAlertPayload(payload)
         }
         ContextCompat.startForegroundService(context, serviceIntent)
     }

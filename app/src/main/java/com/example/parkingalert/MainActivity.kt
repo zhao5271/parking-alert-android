@@ -329,7 +329,13 @@ class MainActivity : AppCompatActivity() {
                 setSmsTestLoading(false)
 
                 result.getOrNull()?.let { matched ->
-                    startAlertService(matched.body)
+                    startAlertService(
+                        ReminderCopyGenerator.generate(
+                            messageBody = matched.body,
+                            matchedRuleName = matched.matchedRuleName,
+                            senderHint = matched.address,
+                        ),
+                    )
                     Snackbar.make(
                         binding.root,
                         getString(
@@ -462,10 +468,11 @@ class MainActivity : AppCompatActivity() {
             .apply()
     }
 
-    private fun startAlertService(message: String) {
+    private fun startAlertService(payload: ReminderAlertPayload) {
         val intent = Intent(this, AlertService::class.java).apply {
             action = AlertService.ACTION_START
-            putExtra(AlertService.EXTRA_MESSAGE, message)
+            putExtra(AlertService.EXTRA_MESSAGE, payload.sourceMessage)
+            putAlertPayload(payload)
         }
         ContextCompat.startForegroundService(this, intent)
     }

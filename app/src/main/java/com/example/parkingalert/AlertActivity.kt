@@ -43,10 +43,15 @@ class AlertActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         window.attributes = window.attributes.apply { screenBrightness = 1f }
 
-        binding.alertMessageText.text =
-            intent.getStringExtra(AlertService.EXTRA_MESSAGE).orEmpty().ifBlank {
-                getString(R.string.alert_notification_text)
-            }
+        val payload = intent.toAlertPayload()
+        binding.alertTitleText.text = payload?.title?.ifBlank {
+            getString(R.string.alert_screen_title)
+        } ?: getString(R.string.alert_screen_title)
+        binding.alertMessageText.text = payload?.body?.ifBlank {
+            intent.getStringExtra(AlertService.EXTRA_MESSAGE).orEmpty()
+                .ifBlank { getString(R.string.alert_notification_text) }
+        } ?: intent.getStringExtra(AlertService.EXTRA_MESSAGE).orEmpty()
+            .ifBlank { getString(R.string.alert_notification_text) }
 
         binding.stopAlertButton.setOnClickListener {
             stopAlert()
