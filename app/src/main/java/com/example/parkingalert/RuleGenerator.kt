@@ -111,29 +111,50 @@ object RuleGenerator {
             candidate.copy(type = classifyCandidateType(candidate.text))
         }
         if (reclassifiedCandidates.all { it.type == RuleCandidateType.OTHER } && reclassifiedCandidates.size < 2) {
-            return null
+            return generateFallbackRule(
+                displayName = displayName,
+                sampleText = normalizedSample,
+                selectedCandidates = reclassifiedCandidates,
+            )
         }
-        val resolvedExcludeKeywords = resolveExcludeKeywords(
+
+        return generatePrimaryRule(
+            displayName = displayName,
             sampleText = normalizedSample,
-            candidateTexts = reclassifiedCandidates.map(RuleCandidate::text),
+            selectedCandidates = reclassifiedCandidates,
+        ) ?: generateFallbackRule(
+            displayName = displayName,
+            sampleText = normalizedSample,
+            selectedCandidates = reclassifiedCandidates,
+        )
+    }
+
+    private fun generatePrimaryRule(
+        displayName: String,
+        sampleText: String,
+        selectedCandidates: List<RuleCandidate>,
+    ): SmsRule? {
+        val resolvedExcludeKeywords = resolveExcludeKeywords(
+            sampleText = sampleText,
+            candidateTexts = selectedCandidates.map(RuleCandidate::text),
         )
 
-        val senderCandidates = reclassifiedCandidates
+        val senderCandidates = selectedCandidates
             .filter { it.type == RuleCandidateType.SENDER && isStrongSenderCandidate(it.text) }
             .map(RuleCandidate::text)
-        val violationCandidates = reclassifiedCandidates
+        val violationCandidates = selectedCandidates
             .filter { it.type == RuleCandidateType.VIOLATION }
             .map(RuleCandidate::text)
-        val actionCandidates = reclassifiedCandidates
+        val actionCandidates = selectedCandidates
             .filter { it.type == RuleCandidateType.ACTION }
             .map(RuleCandidate::text)
-        val supplementaryCandidates = reclassifiedCandidates
+        val supplementaryCandidates = selectedCandidates
             .filterNot { it.type == RuleCandidateType.SENDER || it.type == RuleCandidateType.VIOLATION || it.type == RuleCandidateType.ACTION }
             .map(RuleCandidate::text)
 
         val draftRule = buildRule(
             displayName = displayName,
-            sampleText = normalizedSample,
+            sampleText = sampleText,
             requiredKeywordGroups = buildList {
                 if (senderCandidates.isNotEmpty()) add(senderCandidates)
                 if (violationCandidates.isNotEmpty()) add(violationCandidates)
@@ -143,18 +164,18 @@ object RuleGenerator {
             minimumSupplementaryMatches = calculateMinimumMatches(supplementaryCandidates.size),
             excludeKeywords = resolvedExcludeKeywords,
         )
-        if (draftRule.matches(normalizedSample)) {
+        if (draftRule.matches(sampleText)) {
             return draftRule
         }
 
         val relaxedRule = draftRule.copy(minimumSupplementaryMatches = 0)
-        if (relaxedRule.matches(normalizedSample)) {
+        if (relaxedRule.matches(sampleText)) {
             return relaxedRule
         }
 
         val actionAsSupplementary = buildRule(
             displayName = displayName,
-            sampleText = normalizedSample,
+            sampleText = sampleText,
             requiredKeywordGroups = buildList {
                 if (senderCandidates.isNotEmpty()) add(senderCandidates)
                 if (violationCandidates.isNotEmpty()) add(violationCandidates)
@@ -163,13 +184,13 @@ object RuleGenerator {
             minimumSupplementaryMatches = 0,
             excludeKeywords = resolvedExcludeKeywords,
         )
-        if (actionAsSupplementary.matches(normalizedSample)) {
+        if (actionAsSupplementary.matches(sampleText)) {
             return actionAsSupplementary
         }
 
         val broadestRule = buildRule(
             displayName = displayName,
-            sampleText = normalizedSample,
+            sampleText = sampleText,
             requiredKeywordGroups = buildList {
                 if (senderCandidates.isNotEmpty()) add(senderCandidates)
             },
@@ -178,7 +199,7 @@ object RuleGenerator {
                 addAll(actionCandidates)
                 addAll(supplementaryCandidates)
                 if (senderCandidates.isEmpty()) {
-                    addAll(reclassifiedCandidates.map(RuleCandidate::text))
+                    addAll(selectedCandidates.map(RuleCandidate::text))
                 }
             }.distinct(),
             minimumSupplementaryMatches = calculateBroadMinimumMatches(
@@ -187,14 +208,110 @@ object RuleGenerator {
                     addAll(actionCandidates)
                     addAll(supplementaryCandidates)
                     if (senderCandidates.isEmpty()) {
-                        addAll(reclassifiedCandidates.map(RuleCandidate::text))
+                        addAll(selectedCandidates.map(RuleCandidate::text))
                     }
                 }.distinct().size,
                 hasRequiredGroups = senderCandidates.isNotEmpty(),
             ),
             excludeKeywords = resolvedExcludeKeywords,
         )
-        return broadestRule.takeIf { it.matches(normalizedSample) }
+        return broadestRule.takeIf { it.matches(sampleText) }
+    }
+
+    private fun generateFallbackRule(
+        displayName: String,
+        sampleText: String,
+        selectedCandidates: List<RuleCandidate>,
+    ): SmsRule? {
+        val fallbackAnchors = buildFallbackAnchorPool(
+            sampleText = sampleText,
+            selectedCandidates = selectedCandidates,
+        )
+        if (fallbackAnchors.isEmpty() || !isFallbackEligibleSample(sampleText, fallbackAnchors)) {
+            return null
+        }
+
+        val resolvedExcludeKeywords = resolveExcludeKeywords(
+            sampleText = sampleText,
+            candidateTexts = fallbackAnchors.map(RuleCandidate::text),
+        )
+        val senderAnchors = fallbackAnchors
+            .filter { it.type == RuleCandidateType.SENDER && isStrongSenderCandidate(it.text) }
+            .map(RuleCandidate::text)
+            .distinct()
+        val semanticAnchors = fallbackAnchors
+            .filter(::isSemanticFallbackAnchor)
+            .sortedWith(compareBy<RuleCandidate>({ candidatePriority(it) }, { -it.text.length }))
+            .map(RuleCandidate::text)
+            .distinct()
+        val contextualAnchors = fallbackAnchors
+            .filter(::canUseContextualFallbackAnchor)
+            .sortedByDescending { it.textLength }
+            .map(RuleCandidate::text)
+            .distinct()
+
+        for (senderAnchor in senderAnchors) {
+            for (semanticAnchor in semanticAnchors) {
+                buildRequiredOnlyRule(
+                    displayName = displayName,
+                    sampleText = sampleText,
+                    requiredKeywordGroups = listOf(listOf(senderAnchor), listOf(semanticAnchor)),
+                    excludeKeywords = resolvedExcludeKeywords,
+                )?.let { return it }
+            }
+        }
+
+        for (senderAnchor in senderAnchors) {
+            for (contextualAnchor in contextualAnchors) {
+                buildRequiredOnlyRule(
+                    displayName = displayName,
+                    sampleText = sampleText,
+                    requiredKeywordGroups = listOf(listOf(senderAnchor), listOf(contextualAnchor)),
+                    excludeKeywords = resolvedExcludeKeywords,
+                )?.let { return it }
+            }
+        }
+
+        for (firstIndex in 0 until semanticAnchors.lastIndex) {
+            for (secondIndex in firstIndex + 1 until semanticAnchors.size) {
+                buildRequiredOnlyRule(
+                    displayName = displayName,
+                    sampleText = sampleText,
+                    requiredKeywordGroups = listOf(
+                        listOf(semanticAnchors[firstIndex]),
+                        listOf(semanticAnchors[secondIndex]),
+                    ),
+                    excludeKeywords = resolvedExcludeKeywords,
+                )?.let { return it }
+            }
+        }
+
+        for (semanticAnchor in semanticAnchors) {
+            for (contextualAnchor in contextualAnchors) {
+                buildRequiredOnlyRule(
+                    displayName = displayName,
+                    sampleText = sampleText,
+                    requiredKeywordGroups = listOf(listOf(semanticAnchor), listOf(contextualAnchor)),
+                    excludeKeywords = resolvedExcludeKeywords,
+                )?.let { return it }
+            }
+        }
+
+        fallbackAnchors
+            .filter(::canUseSingleFallbackAnchor)
+            .sortedByDescending { it.textLength }
+            .map(RuleCandidate::text)
+            .distinct()
+            .forEach { anchorText ->
+                buildRequiredOnlyRule(
+                    displayName = displayName,
+                    sampleText = sampleText,
+                    requiredKeywordGroups = listOf(listOf(anchorText)),
+                    excludeKeywords = resolvedExcludeKeywords,
+                )?.let { return it }
+            }
+
+        return null
     }
 
     private fun normalizeCandidate(candidate: RuleCandidate): RuleCandidate? {
@@ -236,6 +353,23 @@ object RuleGenerator {
             isBuiltIn = false,
             createdAt = System.currentTimeMillis(),
         )
+    }
+
+    private fun buildRequiredOnlyRule(
+        displayName: String,
+        sampleText: String,
+        requiredKeywordGroups: List<List<String>>,
+        excludeKeywords: List<String>,
+    ): SmsRule? {
+        if (requiredKeywordGroups.isEmpty()) return null
+        return buildRule(
+            displayName = displayName,
+            sampleText = sampleText,
+            requiredKeywordGroups = requiredKeywordGroups,
+            supplementaryKeywords = emptyList(),
+            minimumSupplementaryMatches = 0,
+            excludeKeywords = excludeKeywords,
+        ).takeIf { it.matches(sampleText) }
     }
 
     private fun resolveExcludeKeywords(sampleText: String, candidateTexts: List<String>): List<String> {
@@ -339,6 +473,60 @@ object RuleGenerator {
                 )
             }
     }
+
+    private fun buildFallbackAnchorPool(
+        sampleText: String,
+        selectedCandidates: List<RuleCandidate>,
+    ): List<RuleCandidate> {
+        return (selectedCandidates + extractCandidates(sampleText) + extractClauseCandidates(sampleText))
+            .mapNotNull(::normalizeCandidate)
+            .map { it.copy(type = classifyCandidateType(it.text)) }
+            .distinctBy(RuleCandidate::text)
+    }
+
+    private fun isFallbackEligibleSample(sampleText: String, fallbackAnchors: List<RuleCandidate>): Boolean {
+        val compactSample = sampleText.compactForMatching()
+        if (strongKeywordSeeds.any { compactSample.contains(it.compactForMatching()) }) {
+            return true
+        }
+
+        val hasStrongSender = fallbackAnchors.any { it.type == RuleCandidateType.SENDER && isStrongSenderCandidate(it.text) }
+        val hasSemanticAnchor = fallbackAnchors.any(::isSemanticFallbackAnchor)
+        val hasContextualAnchor = fallbackAnchors.any(::canUseContextualFallbackAnchor)
+        return hasSemanticAnchor || (hasStrongSender && hasContextualAnchor)
+    }
+
+    private fun isSemanticFallbackAnchor(candidate: RuleCandidate): Boolean {
+        if (candidate.type == RuleCandidateType.VIOLATION || candidate.type == RuleCandidateType.ACTION) {
+            return true
+        }
+        return strongKeywordSeeds.any(candidate.text::contains)
+    }
+
+    private fun canUseContextualFallbackAnchor(candidate: RuleCandidate): Boolean {
+        if (candidate.type != RuleCandidateType.LOCATION && candidate.type != RuleCandidateType.OTHER) {
+            return false
+        }
+        if (isStrongSenderCandidate(candidate.text)) {
+            return false
+        }
+        return candidate.textLength >= MIN_FALLBACK_CONTEXT_LENGTH
+    }
+
+    private fun canUseSingleFallbackAnchor(candidate: RuleCandidate): Boolean {
+        if (isStrongSenderCandidate(candidate.text)) {
+            return false
+        }
+        if (candidate.textLength < MIN_FALLBACK_SINGLE_LENGTH) {
+            return false
+        }
+        return candidate.type != RuleCandidateType.OTHER ||
+            strongKeywordSeeds.any(candidate.text::contains) ||
+            candidate.type == RuleCandidateType.LOCATION
+    }
+
+    private val RuleCandidate.textLength: Int
+        get() = text.length
 
     private fun classifyCandidateType(text: String): RuleCandidateType {
         return when {
@@ -547,4 +735,6 @@ object RuleGenerator {
     private const val MAX_CLAUSE_LENGTH = 30
     private const val MAX_SENDER_LENGTH = 24
     private const val RULE_NAME_PREVIEW_LENGTH = 16
+    private const val MIN_FALLBACK_CONTEXT_LENGTH = 6
+    private const val MIN_FALLBACK_SINGLE_LENGTH = 8
 }
