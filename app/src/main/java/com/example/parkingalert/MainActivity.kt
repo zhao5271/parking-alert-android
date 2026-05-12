@@ -167,6 +167,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showAddRuleDialog() {
         val dialogBinding = DialogAddRuleBinding.inflate(layoutInflater)
+        configureTagListViewport(dialogBinding)
         var extractedTags = emptyList<String>()
         val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.add_rule_dialog_title)
@@ -192,6 +193,7 @@ class MainActivity : AppCompatActivity() {
             dialogBinding.ruleSampleLayout.error = null
             dialogBinding.tagChipGroup.removeAllViews()
             dialogBinding.tagHintText.visibility = View.VISIBLE
+            dialogBinding.tagScrollView.visibility = View.GONE
         }
 
         dialog.setOnShowListener {
@@ -232,9 +234,14 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    private fun configureTagListViewport(dialogBinding: DialogAddRuleBinding) {
+        dialogBinding.tagScrollView.maxHeightPx = (resources.displayMetrics.heightPixels * 0.32f).toInt()
+    }
+
     private fun renderTagChips(dialogBinding: DialogAddRuleBinding, tags: List<String>) {
         dialogBinding.tagChipGroup.removeAllViews()
         dialogBinding.tagHintText.visibility = if (tags.isEmpty()) View.VISIBLE else View.GONE
+        dialogBinding.tagScrollView.visibility = if (tags.isEmpty()) View.GONE else View.VISIBLE
 
         tags.forEach { tag ->
             val chip = Chip(this).apply {
