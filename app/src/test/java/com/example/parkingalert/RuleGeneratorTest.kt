@@ -1,6 +1,7 @@
 package com.example.parkingalert
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -37,7 +38,7 @@ class RuleGeneratorTest {
 
     @Test
     fun `generate should still build a rule for real violation sample`() {
-        val sample = "【六安市公安局交通管理支队】您的小型汽车皖N85C85于2025年12月13日15:02在六安市长安路皖西大道至皋城路段，被交通技术监控设备记录了『违反规定停放、临时停车且驾驶人不在现场或驾驶人虽在现场拒绝立即驶离，妨碍其他车辆、行人通行的』的违法行为。请于收到本告知之日起30日内接受处理。"
+        val sample = "【六安市公安局交通管理支队】您的小型汽车皖N85C85于2025年12月13日15:02在六安市长安路皖西大道至皋城路段，被交通技术监控设备记录了『违反规定停放、临时停车且驾驶人不在现场或驾驶人虽在现场拒绝立即驶离，妨碍其他车辆、行人通行的』的违法行为。请于收到本告知之日起30日内接受处理。（温馨提示）您在处理交通违法后，可登录“交管12123APP”，参加“学法减分”教育，减免交通违法记分。"
         val candidates = RuleGenerator.extractCandidates(sample)
 
         val generatedRule = RuleGenerator.generate(
@@ -49,6 +50,7 @@ class RuleGeneratorTest {
         assertNotNull(generatedRule)
         assertTrue(generatedRule!!.matches(sample))
         assertEquals("六安市公安局交通管理支队", generatedRule.requiredKeywordGroups.first().first())
+        assertFalse(generatedRule.excludeKeywords.contains("登录"))
     }
 
     @Test

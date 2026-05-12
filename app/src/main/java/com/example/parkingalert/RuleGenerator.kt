@@ -59,8 +59,10 @@ object RuleGenerator {
         return candidates.values.take(MAX_KEYWORDS)
     }
 
-    fun extractCandidatesForGeneration(sampleText: String): List<RuleCandidate> {
-        val extractedCandidates = extractCandidates(sampleText)
+    fun extractCandidatesForGeneration(
+        sampleText: String,
+        extractedCandidates: List<RuleCandidate> = extractCandidates(sampleText),
+    ): List<RuleCandidate> {
         if (extractedCandidates.isEmpty()) {
             return emptyList()
         }
@@ -108,6 +110,13 @@ object RuleGenerator {
         val reclassifiedCandidates = normalizedCandidates.map { candidate ->
             candidate.copy(type = classifyCandidateType(candidate.text))
         }
+        if (reclassifiedCandidates.all { it.type == RuleCandidateType.OTHER } && reclassifiedCandidates.size < 2) {
+            return null
+        }
+        val resolvedExcludeKeywords = resolveExcludeKeywords(
+            sampleText = normalizedSample,
+            candidateTexts = reclassifiedCandidates.map(RuleCandidate::text),
+        )
 
         val senderCandidates = reclassifiedCandidates
             .filter { it.type == RuleCandidateType.SENDER && isStrongSenderCandidate(it.text) }
@@ -132,6 +141,7 @@ object RuleGenerator {
             },
             supplementaryKeywords = supplementaryCandidates,
             minimumSupplementaryMatches = calculateMinimumMatches(supplementaryCandidates.size),
+            excludeKeywords = resolvedExcludeKeywords,
         )
         if (draftRule.matches(normalizedSample)) {
             return draftRule
@@ -151,6 +161,7 @@ object RuleGenerator {
             },
             supplementaryKeywords = (supplementaryCandidates + actionCandidates).distinct(),
             minimumSupplementaryMatches = 0,
+            excludeKeywords = resolvedExcludeKeywords,
         )
         if (actionAsSupplementary.matches(normalizedSample)) {
             return actionAsSupplementary
@@ -181,6 +192,7 @@ object RuleGenerator {
                 }.distinct().size,
                 hasRequiredGroups = senderCandidates.isNotEmpty(),
             ),
+            excludeKeywords = resolvedExcludeKeywords,
         )
         return broadestRule.takeIf { it.matches(normalizedSample) }
     }
@@ -204,6 +216,7 @@ object RuleGenerator {
         requiredKeywordGroups: List<List<String>>,
         supplementaryKeywords: List<String>,
         minimumSupplementaryMatches: Int,
+        excludeKeywords: List<String>,
     ): SmsRule {
         return SmsRule(
             id = UUID.randomUUID().toString(),
@@ -218,11 +231,27 @@ object RuleGenerator {
                 .filterNot(genericWeakKeywords::contains)
                 .distinct(),
             minimumSupplementaryMatches = minimumSupplementaryMatches,
-            excludeKeywords = SmsRuleRepository.defaultExcludeKeywords,
+            excludeKeywords = excludeKeywords,
             enabled = true,
             isBuiltIn = false,
             createdAt = System.currentTimeMillis(),
         )
+    }
+
+    private fun resolveExcludeKeywords(sampleText: String, candidateTexts: List<String>): List<String> {
+        val compactSample = sampleText.compactForMatching()
+        val compactCandidates = candidateTexts.map(String::compactForMatching)
+        return SmsRuleRepository.defaultExcludeKeywords
+            .map(String::trim)
+            .filter(String::isNotBlank)
+            .distinct()
+            .filterNot { excludeKeyword ->
+                val compactExcludeKeyword = excludeKeyword.compactForMatching()
+                compactExcludeKeyword.isNotEmpty() && (
+                    compactSample.contains(compactExcludeKeyword) ||
+                        compactCandidates.any { candidate -> candidate.contains(compactExcludeKeyword) }
+                    )
+            }
     }
 
     private fun calculateMinimumMatches(candidateCount: Int): Int {

@@ -216,7 +216,7 @@ class MainActivity : AppCompatActivity() {
             extractedCandidates.clear()
             val sampleText = dialogBinding.ruleSampleInput.text?.toString().orEmpty()
             val extracted = RuleGenerator.extractCandidates(sampleText)
-            val recommendedIds = RuleGenerator.extractCandidatesForGeneration(sampleText)
+            val recommendedIds = RuleGenerator.extractCandidatesForGeneration(sampleText, extracted)
                 .map(RuleCandidate::id)
                 .toSet()
             extractedCandidates += extracted.map { candidate ->
@@ -242,7 +242,7 @@ class MainActivity : AppCompatActivity() {
                     extractedCandidates.clear()
                     val sampleText = dialogBinding.ruleSampleInput.text?.toString().orEmpty()
                     val extracted = RuleGenerator.extractCandidates(sampleText)
-                    val recommendedIds = RuleGenerator.extractCandidatesForGeneration(sampleText)
+                    val recommendedIds = RuleGenerator.extractCandidatesForGeneration(sampleText, extracted)
                         .map(RuleCandidate::id)
                         .toSet()
                     extractedCandidates += extracted.map { candidate ->
