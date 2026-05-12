@@ -1,0 +1,92 @@
+<svg width="1600" height="1650" viewBox="0 0 1600 1650" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .panel-title { font: 700 24px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #222; }
+    .box-text { font: 700 18px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #222; text-anchor: middle; dominant-baseline: middle; }
+    .note-text { font: 700 16px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #c23b22; }
+    .hint-text { font: 700 18px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #222; text-anchor: middle; dominant-baseline: middle; }
+    .box { fill: #fffdfb; stroke: #222; stroke-width: 3; }
+    .dashed { stroke-dasharray: 10 8; }
+    .panel-green { fill: #d9f0ea; stroke: #222; stroke-width: 3; }
+    .panel-pink { fill: #fde1db; stroke: #222; stroke-width: 3; }
+  </style>
+
+  <defs>
+    <marker id="arrow-black" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#222"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d5b"/>
+    </marker>
+    <marker id="arrow-brown" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b4f2b"/>
+    </marker>
+  </defs>
+
+  <rect x="10" y="10" width="1580" height="810" rx="28" class="panel-green"/>
+  <rect x="10" y="860" width="1580" height="780" rx="28" class="panel-pink"/>
+
+  <text x="52" y="48" class="panel-title">规则生成与管理</text>
+  <text x="52" y="900" class="panel-title">识别与告警</text>
+
+  <rect x="118" y="160" width="340" height="96" rx="22" class="box"/>
+  <text x="288" y="208" class="box-text">查看内置规则</text>
+
+  <rect x="594" y="128" width="410" height="78" rx="22" class="box"/>
+  <text x="799" y="167" class="box-text">粘贴真实短信样本</text>
+
+  <rect x="594" y="258" width="410" height="76" rx="22" class="box"/>
+  <text x="799" y="296" class="box-text">点击提炼标签</text>
+
+  <rect x="594" y="388" width="410" height="96" rx="22" class="box"/>
+  <text x="799" y="436" class="box-text">勾选、取消勾选并编辑标签</text>
+
+  <rect x="594" y="538" width="410" height="78" rx="22" class="box"/>
+  <text x="799" y="577" class="box-text">生成并启用新规则</text>
+
+  <rect x="1098" y="248" width="332" height="214" rx="28" class="box"/>
+  <text x="1264" y="300" class="box-text">规则面板</text>
+  <text x="1264" y="336" class="box-text">多条规则并存</text>
+  <text x="1264" y="372" class="box-text">支持启用 / 禁用</text>
+  <text x="1264" y="408" class="box-text">支持删除</text>
+
+  <rect x="594" y="1020" width="410" height="98" rx="22" class="box"/>
+  <text x="799" y="1060" class="box-text">等待真实短信</text>
+  <text x="799" y="1092" class="box-text">或点击测试响铃</text>
+
+  <rect x="1100" y="1016" width="344" height="126" rx="22" class="box dashed"/>
+  <text x="1272" y="1064" class="hint-text">测试响铃会扫描</text>
+  <text x="1272" y="1100" class="hint-text">最近 80 条短信</text>
+
+  <rect x="594" y="1162" width="410" height="82" rx="22" class="box"/>
+  <text x="799" y="1203" class="box-text">仅用启用中的规则逐条匹配短信</text>
+
+  <rect x="594" y="1286" width="410" height="82" rx="22" class="box"/>
+  <text x="799" y="1327" class="box-text">是否命中任意一条启用规则？</text>
+
+  <rect x="594" y="1412" width="410" height="122" rx="22" class="box"/>
+  <text x="799" y="1450" class="box-text">触发强提醒</text>
+  <text x="799" y="1486" class="box-text">通知 / 响铃 / 震动 / 亮屏</text>
+  <text x="799" y="1520" class="box-text">/ 闪光</text>
+
+  <rect x="594" y="1578" width="410" height="82" rx="22" class="box"/>
+  <text x="799" y="1619" class="box-text">用户点击停止响铃 / 结束告警</text>
+
+  <text x="1036" y="1318" class="note-text">未命中则继续等待</text>
+  <text x="1036" y="1348" class="note-text">下一条短信</text>
+
+  <path d="M799 206 L799 258" stroke="#222" stroke-width="4" fill="none" marker-end="url(#arrow-black)"/>
+  <path d="M799 334 L799 388" stroke="#222" stroke-width="4" fill="none" marker-end="url(#arrow-black)"/>
+  <path d="M799 484 L799 538" stroke="#222" stroke-width="4" fill="none" marker-end="url(#arrow-black)"/>
+
+  <path d="M458 208 H1138 V350" stroke="#2e7d5b" stroke-width="4" fill="none" marker-end="url(#arrow-green)"/>
+  <path d="M1004 167 H1128 V450" stroke="#2e7d5b" stroke-width="4" fill="none" marker-end="url(#arrow-green)"/>
+  <path d="M1004 577 H1138 V350" stroke="#2e7d5b" stroke-width="4" fill="none" marker-end="url(#arrow-green)"/>
+
+  <path d="M1264 462 V1010 H1004" stroke="#8b4f2b" stroke-width="4" fill="none" marker-end="url(#arrow-brown)"/>
+  <path d="M1270 1078 H1008" stroke="#8b4f2b" stroke-width="3" stroke-dasharray="10 8" fill="none" marker-end="url(#arrow-brown)"/>
+
+  <path d="M799 1118 L799 1162" stroke="#222" stroke-width="4" fill="none" marker-end="url(#arrow-black)"/>
+  <path d="M799 1244 L799 1286" stroke="#222" stroke-width="4" fill="none" marker-end="url(#arrow-black)"/>
+  <path d="M799 1368 L799 1412" stroke="#222" stroke-width="4" fill="none" marker-end="url(#arrow-black)"/>
+  <path d="M799 1534 L799 1578" stroke="#222" stroke-width="4" fill="none" marker-end="url(#arrow-black)"/>
+</svg>
