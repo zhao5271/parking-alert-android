@@ -39,6 +39,14 @@ class AlertService : Service() {
         }
     }
 
+    private val stopTorchRunnable = Runnable {
+        stopTorchBlink()
+    }
+
+    private val stopVibrationRunnable = Runnable {
+        stopVibration()
+    }
+
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
@@ -117,6 +125,7 @@ class AlertService : Service() {
     }
 
     private fun startVibration() {
+        mainHandler.removeCallbacks(stopVibrationRunnable)
         val vibrator = getSystemService(Vibrator::class.java) ?: return
         val pattern = longArrayOf(0, 300, 180, 300, 180)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -125,22 +134,27 @@ class AlertService : Service() {
             @Suppress("DEPRECATION")
             vibrator.vibrate(pattern, 0)
         }
+        mainHandler.postDelayed(stopVibrationRunnable, VIBRATION_DURATION_MS)
     }
 
     private fun stopVibration() {
+        mainHandler.removeCallbacks(stopVibrationRunnable)
         getSystemService(Vibrator::class.java)?.cancel()
     }
 
     private fun startTorchBlink() {
         if (torchBlinking) return
         if (!hasCameraPermission() || torchCameraId == null) return
+        mainHandler.removeCallbacks(stopTorchRunnable)
         torchBlinking = true
         mainHandler.post(torchBlinkRunnable)
+        mainHandler.postDelayed(stopTorchRunnable, TORCH_BLINK_DURATION_MS)
     }
 
     private fun stopTorchBlink() {
         torchBlinking = false
         mainHandler.removeCallbacks(torchBlinkRunnable)
+        mainHandler.removeCallbacks(stopTorchRunnable)
         setTorchEnabled(false)
     }
 
@@ -252,5 +266,7 @@ class AlertService : Service() {
         private const val CHANNEL_ID = "parking_alert_channel"
         private const val NOTIFICATION_ID = 1001
         private const val TORCH_BLINK_INTERVAL_MS = 220L
+        private const val TORCH_BLINK_DURATION_MS = 20_000L
+        private const val VIBRATION_DURATION_MS = 10_000L
     }
 }

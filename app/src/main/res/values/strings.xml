@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">挪车提醒</string>
     <string name="app_title">违停短信立即响铃</string>
-    <string name="app_intro">收到符合规则的短信后，应用会立刻启动前台告警、循环播放系统闹铃，并尝试亮屏、全屏告警和闪光灯爆闪。</string>
+    <string name="app_intro">收到符合规则的短信后，应用会立刻启动前台告警、循环播放系统闹铃，并短时亮屏、全屏告警和闪光灯爆闪，以兼顾提醒强度和省电。</string>
     <string name="request_permissions_button">申请短信、通知和闪光灯权限</string>
     <string name="test_alarm_button">测试响铃</string>
     <string name="stop_alarm_button">停止响铃</string>
@@ -9,7 +9,7 @@
     <string name="status_missing">未授权</string>
     <string name="permission_status_template">短信权限：%1$s\n通知权限：%2$s\n闪光灯权限：%3$s</string>
     <string name="match_rules_title">当前匹配规则</string>
-    <string name="match_rules_body">短信正文包含「交警」，且同时包含「请立即驶离」或「未按规定停放」时触发。</string>
+    <string name="match_rules_body">短信正文同时命中“执法机构特征 + 违停特征 + 处置/处罚特征”时触发，例如包含「交警/交通管理支队」「停放/临时停车/违法行为」「请立即驶离/已被记录/接受处理」等组合。</string>
     <string name="setup_tips_title">使用提醒</string>
     <string name="setup_tips_body">请在手机系统里关闭该应用的省电限制，并允许自启动；若要使用闪光灯爆闪，请授予相机权限。频繁强闪可能刺激眼睛，不建议长时间测试。</string>
     <string name="test_alert_message">【测试】这是一条手动触发的违停提醒响铃。</string>

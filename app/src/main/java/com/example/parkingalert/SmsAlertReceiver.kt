@@ -43,9 +43,30 @@ class SmsAlertReceiver : BroadcastReceiver() {
 
     private fun isParkingReminder(body: String): Boolean {
         val compact = body.replace(" ", "")
-        return compact.contains("交警") &&
-            (compact.contains("请立即驶离") ||
-            compact.contains("未按规定停放"))
+        val authorityKeywords = listOf(
+            "交警",
+            "公安局交通管理",
+            "交通管理支队",
+            "交通技术监控设备"
+        )
+        val parkingViolationKeywords = listOf(
+            "违停",
+            "停放",
+            "临时停车",
+            "违法行为"
+        )
+        val enforcementKeywords = listOf(
+            "请立即驶离",
+            "拒绝立即驶离",
+            "未及时驶离",
+            "已被记录",
+            "予以处罚",
+            "接受处理"
+        )
+
+        return authorityKeywords.any(compact::contains) &&
+            parkingViolationKeywords.any(compact::contains) &&
+            enforcementKeywords.any(compact::contains)
     }
 
     companion object {
