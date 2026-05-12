@@ -111,6 +111,7 @@ class MainActivity : AppCompatActivity() {
         val notificationGranted =
             Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
                 hasPermission(Manifest.permission.POST_NOTIFICATIONS)
+        val allGranted = smsGranted && cameraGranted && notificationGranted
 
         binding.permissionStatusText.text = getString(
             R.string.permission_status_template,
@@ -119,8 +120,8 @@ class MainActivity : AppCompatActivity() {
             if (cameraGranted) getString(R.string.status_granted) else getString(R.string.status_missing),
         )
 
-        binding.permissionActionButton.visibility =
-            if (smsGranted && cameraGranted && notificationGranted) View.GONE else View.VISIBLE
+        binding.permissionCard.visibility = if (allGranted) View.GONE else View.VISIBLE
+        binding.permissionActionButton.visibility = if (allGranted) View.GONE else View.VISIBLE
     }
 
     private fun renderRules() {
@@ -131,21 +132,33 @@ class MainActivity : AppCompatActivity() {
         rules.forEach { rule ->
             val itemBinding = ItemRuleBinding.inflate(LayoutInflater.from(this), binding.rulesContainer, false)
             itemBinding.ruleTitleText.text = rule.name
-            itemBinding.ruleBadgeText.text = getString(
-                if (rule.isBuiltIn) R.string.rule_badge_builtin else R.string.rule_badge_custom,
-            )
-            itemBinding.ruleBadgeText.setBackgroundResource(
-                if (rule.isBuiltIn) R.drawable.bg_rule_badge_builtin else R.drawable.bg_rule_badge_custom,
-            )
             itemBinding.ruleSummaryText.text = buildRuleSummary(rule)
             itemBinding.ruleMetaText.text = buildRuleMeta(rule)
-            itemBinding.ruleEnabledSwitch.isChecked = rule.enabled
-            itemBinding.ruleEnabledSwitch.setOnCheckedChangeListener { _, isChecked ->
-                ruleRepository.updateRuleEnabled(rule.id, isChecked)
-                refreshHeroStatus()
+            itemBinding.ruleToggleButton.text = getString(
+                if (rule.enabled) R.string.disable_rule_button else R.string.enable_rule_button,
+            )
+            itemBinding.ruleToggleButton.setOnClickListener {
+                ruleRepository.updateRuleEnabled(rule.id, !rule.enabled)
+                refreshDashboard()
+            }
+            itemBinding.ruleDeleteButton.setOnClickListener {
+                confirmDeleteRule(rule)
             }
             binding.rulesContainer.addView(itemBinding.root)
         }
+    }
+
+    private fun confirmDeleteRule(rule: SmsRule) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.delete_rule_dialog_title)
+            .setMessage(getString(R.string.delete_rule_dialog_message, rule.name))
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.delete_rule_confirm_button) { _, _ ->
+                ruleRepository.deleteRule(rule.id)
+                refreshDashboard()
+                Snackbar.make(binding.root, R.string.rule_delete_success, Snackbar.LENGTH_SHORT).show()
+            }
+            .show()
     }
 
     private fun buildRuleSummary(rule: SmsRule): String {

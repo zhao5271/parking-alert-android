@@ -8,12 +8,12 @@ import org.json.JSONObject
 class SmsRuleRepository(private val context: Context) {
 
     fun getRules(): List<SmsRule> {
-        val savedRules = readPersistedRules().toMutableList()
-        val mergedRules = mergeBuiltInRules(savedRules)
-        if (mergedRules != savedRules) {
-            saveRules(mergedRules)
+        if (!prefs.contains(PREF_RULES)) {
+            saveRules(builtInRules)
         }
-        return mergedRules.sortedWith(compareByDescending<SmsRule> { it.isBuiltIn }.thenByDescending { it.createdAt })
+
+        return readPersistedRules()
+            .sortedWith(compareByDescending<SmsRule> { it.isBuiltIn }.thenByDescending { it.createdAt })
     }
 
     fun addRule(rule: SmsRule) {
@@ -28,22 +28,9 @@ class SmsRuleRepository(private val context: Context) {
         saveRules(updatedRules)
     }
 
-    private fun mergeBuiltInRules(savedRules: List<SmsRule>): List<SmsRule> {
-        val savedById = savedRules.associateBy(SmsRule::id)
-        val merged = builtInRules.map { builtIn ->
-            savedById[builtIn.id]?.copy(
-                name = builtIn.name,
-                sampleText = builtIn.sampleText,
-                requiredKeywordGroups = builtIn.requiredKeywordGroups,
-                supplementaryKeywords = builtIn.supplementaryKeywords,
-                minimumSupplementaryMatches = builtIn.minimumSupplementaryMatches,
-                excludeKeywords = builtIn.excludeKeywords,
-                isBuiltIn = true,
-            ) ?: builtIn
-        }.toMutableList()
-
-        merged += savedRules.filterNot { saved -> builtInRules.any { it.id == saved.id } }
-        return merged
+    fun deleteRule(ruleId: String) {
+        val updatedRules = getRules().filterNot { it.id == ruleId }
+        saveRules(updatedRules)
     }
 
     private fun readPersistedRules(): List<SmsRule> {

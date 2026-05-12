@@ -16,7 +16,7 @@
     <string name="hero_rule_count">已启用 %1$d / %2$d 条规则</string>
     <string name="hero_rule_count_default">正在检查规则状态…</string>
     <string name="match_rules_title">规则面板</string>
-    <string name="match_rules_body">系统会先拦掉验证码、支付、快递和营销短信，再逐条匹配启用中的内置规则和自定义规则。你可以持续补充本地城市或单位的短信样本，让识别范围越来越广。</string>
+    <string name="match_rules_body">系统会先拦掉验证码、支付、快递和营销短信，再逐条匹配启用中的规则。任意一条启用规则命中，就会触发提醒。你可以持续补充本地城市或单位的短信样本，让识别范围越来越广。</string>
     <string name="empty_rules_text">当前还没有可展示的规则，请先添加一条短信样本。</string>
     <string name="rule_badge_builtin">内置规则</string>
     <string name="rule_badge_custom">自定义规则</string>
@@ -35,6 +35,13 @@
     <string name="rule_generation_error">短信内容太短，或无法提取有效关键词。</string>
     <string name="rule_generation_tag_error">请先提炼标签，并至少保留一个强语义标签后再生成规则。</string>
     <string name="rule_generation_success">新规则已加入监控面板。</string>
+    <string name="enable_rule_button">启用</string>
+    <string name="disable_rule_button">禁用</string>
+    <string name="delete_rule_button">删除规则</string>
+    <string name="delete_rule_dialog_title">删除规则</string>
+    <string name="delete_rule_dialog_message">删除“%1$s”后，它将不再参与短信识别，且不会自动恢复。</string>
+    <string name="delete_rule_confirm_button">确认删除</string>
+    <string name="rule_delete_success">规则已删除。</string>
     <string name="setup_tips_title">使用提醒</string>
     <string name="setup_tips_body">请在系统设置里关闭该应用的省电限制，并允许自启动；如果你所在城市的提醒短信格式不同，直接把原短信粘贴进规则生成器即可。频繁强闪可能刺激眼睛，不建议长时间测试。</string>
     <string name="test_alert_message">【测试】这是一条手动触发的违停提醒响铃。</string>
