@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">挪车提醒</string>
     <string name="app_title">违停短信立即响铃</string>
-    <string name="app_intro">收到符合规则的短信后，应用会立刻启动前台告警、循环播放系统闹铃，并尝试亮屏、全屏闪烁和闪光灯爆闪。</string>
+    <string name="app_intro">收到符合规则的短信后，应用会立刻启动前台告警、循环播放系统闹铃，并尝试亮屏、全屏告警和闪光灯爆闪。</string>
     <string name="request_permissions_button">申请短信、通知和闪光灯权限</string>
     <string name="test_alarm_button">测试响铃</string>
     <string name="stop_alarm_button">停止响铃</string>
