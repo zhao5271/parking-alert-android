@@ -2,7 +2,11 @@
 .idea/
 build/
 local.properties
+keystore.properties
+*.jks
+*.keystore
 *.iml
 app/build/
 captures/
 .DS_Store
+.gitnexus
