@@ -26,12 +26,24 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val ruleRepository by lazy { SmsRuleRepository(applicationContext) }
+    private val smsHistoryTester by lazy { SmsHistoryTester(applicationContext, ruleRepository) }
     private val dateFormatter by lazy { SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()) }
+    @Volatile
+    private var isRunningSmsHistoryTest = false
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
             markPermissionsRequested()
             refreshDashboard()
+        }
+
+    private val smsReadPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                runRealSmsAlarmTest()
+            } else {
+                Snackbar.make(binding.root, R.string.read_sms_permission_denied, Snackbar.LENGTH_SHORT).show()
+            }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +60,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.testAlarmButton.setOnClickListener {
-            startAlertService(getString(R.string.test_alert_message))
+            runRealSmsAlarmTest()
         }
 
         binding.stopAlarmButton.setOnClickListener {
@@ -249,6 +261,63 @@ class MainActivity : AppCompatActivity() {
 
     private fun configureTagListViewport(dialogBinding: DialogAddRuleBinding) {
         dialogBinding.tagScrollView.maxHeightPx = (resources.displayMetrics.heightPixels * 0.32f).toInt()
+    }
+
+    private fun runRealSmsAlarmTest() {
+        if (isRunningSmsHistoryTest) {
+            return
+        }
+
+        val enabledRules = ruleRepository.getRules().count(SmsRule::enabled)
+        if (enabledRules == 0) {
+            Snackbar.make(binding.root, R.string.sms_test_no_enabled_rules, Snackbar.LENGTH_SHORT).show()
+            return
+        }
+
+        if (!hasPermission(Manifest.permission.READ_SMS)) {
+            smsReadPermissionLauncher.launch(Manifest.permission.READ_SMS)
+            return
+        }
+
+        isRunningSmsHistoryTest = true
+        setSmsTestLoading(true)
+        Thread {
+            val result = runCatching {
+                smsHistoryTester.findLatestMatchedMessage()
+            }
+
+            runOnUiThread {
+                isRunningSmsHistoryTest = false
+                setSmsTestLoading(false)
+
+                result.getOrNull()?.let { matched ->
+                    startAlertService(matched.body)
+                    Snackbar.make(
+                        binding.root,
+                        getString(
+                            R.string.sms_test_match_found,
+                            matched.matchedRuleName ?: getString(R.string.sms_test_unknown_rule),
+                        ),
+                        Snackbar.LENGTH_LONG,
+                    ).show()
+                    return@runOnUiThread
+                }
+
+                val messageRes = if (result.isSuccess) {
+                    R.string.sms_test_no_match
+                } else {
+                    R.string.sms_test_failed
+                }
+                Snackbar.make(binding.root, messageRes, Snackbar.LENGTH_SHORT).show()
+            }
+        }.start()
+    }
+
+    private fun setSmsTestLoading(isLoading: Boolean) {
+        binding.testAlarmButton.isEnabled = !isLoading
+        binding.testAlarmButton.text = getString(
+            if (isLoading) R.string.test_alarm_button_loading else R.string.test_alarm_button,
+        )
     }
 
     private fun renderTagChips(dialogBinding: DialogAddRuleBinding, tags: List<String>) {
