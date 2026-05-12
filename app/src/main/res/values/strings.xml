@@ -9,7 +9,7 @@
     <string name="status_missing">未授权</string>
     <string name="permission_status_template">短信权限：%1$s\n通知权限：%2$s\n闪光灯权限：%3$s</string>
     <string name="match_rules_title">当前匹配规则</string>
-    <string name="match_rules_body">短信正文同时命中“执法机构特征 + 违停特征 + 处置/处罚特征”时触发，例如包含「交警/交通管理支队」「停放/临时停车/违法行为」「请立即驶离/已被记录/接受处理」等组合。</string>
+    <string name="match_rules_body">短信会先排除验证码、快递、支付、营销等黑名单词；剩余内容需命中“执法机构特征 + 违停特征 + 处置/处罚特征”，或命中前两组并带有「交管12123 / 学法减分 / 处罚 / 驶离」等白名单辅助词时才触发。</string>
     <string name="setup_tips_title">使用提醒</string>
     <string name="setup_tips_body">请在手机系统里关闭该应用的省电限制，并允许自启动；若要使用闪光灯爆闪，请授予相机权限。频繁强闪可能刺激眼睛，不建议长时间测试。</string>
     <string name="test_alert_message">【测试】这是一条手动触发的违停提醒响铃。</string>

@@ -63,10 +63,60 @@ class SmsAlertReceiver : BroadcastReceiver() {
             "予以处罚",
             "接受处理"
         )
+        val whitelistKeywords = listOf(
+            "学法减分",
+            "交管12123",
+            "温馨提示",
+            "监控设备记录",
+            "已被记录",
+            "驶离",
+            "处罚"
+        )
+        val blacklistKeywords = listOf(
+            "验证码",
+            "校验码",
+            "登录",
+            "注册",
+            "支付",
+            "退款",
+            "快递",
+            "外卖",
+            "取件",
+            "签收",
+            "账单",
+            "还款",
+            "优惠",
+            "促销",
+            "直播",
+            "课程",
+            "面试",
+            "招聘",
+            "酒店",
+            "航班",
+            "车次",
+            "核酸",
+            "就诊",
+            "体检"
+        )
 
-        return authorityKeywords.any(compact::contains) &&
-            parkingViolationKeywords.any(compact::contains) &&
-            enforcementKeywords.any(compact::contains)
+        if (blacklistKeywords.any(compact::contains)) {
+            return false
+        }
+
+        val authorityHits = authorityKeywords.count(compact::contains)
+        val violationHits = parkingViolationKeywords.count(compact::contains)
+        val enforcementHits = enforcementKeywords.count(compact::contains)
+        val whitelistHits = whitelistKeywords.count(compact::contains)
+
+        if (authorityHits > 0 && violationHits > 0 && enforcementHits > 0) {
+            return true
+        }
+
+        val totalCoreHits = authorityHits + violationHits + enforcementHits
+        return authorityHits > 0 &&
+            violationHits > 0 &&
+            totalCoreHits >= 3 &&
+            whitelistHits >= 1
     }
 
     companion object {
