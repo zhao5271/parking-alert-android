@@ -2,25 +2,34 @@ package com.example.parkingalert
 
 import android.Manifest
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import com.example.parkingalert.databinding.ActivityMainBinding
 import com.example.parkingalert.databinding.DialogAddRuleBinding
+import com.example.parkingalert.databinding.ItemRuleCandidateBinding
 import com.example.parkingalert.databinding.ItemRuleBinding
-import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private data class RuleCandidateDraft(
+    val id: String,
+    val text: String,
+    val type: RuleCandidateType,
+    val checked: Boolean = true,
+)
 
 class MainActivity : AppCompatActivity() {
 
@@ -193,7 +202,7 @@ class MainActivity : AppCompatActivity() {
     private fun showAddRuleDialog() {
         val dialogBinding = DialogAddRuleBinding.inflate(layoutInflater)
         configureTagListViewport(dialogBinding)
-        var extractedTags = emptyList<String>()
+        val extractedCandidates = mutableListOf<RuleCandidateDraft>()
         val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.add_rule_dialog_title)
             .setView(dialogBinding.root)
@@ -203,45 +212,54 @@ class MainActivity : AppCompatActivity() {
 
         dialogBinding.extractTagsButton.setOnClickListener {
             dialogBinding.ruleSampleLayout.error = null
-            extractedTags = RuleGenerator.extractTags(
-                dialogBinding.ruleSampleInput.text?.toString().orEmpty(),
-            )
-            renderTagChips(dialogBinding, extractedTags)
+            hideKeyboard(dialogBinding.ruleSampleInput)
+            extractedCandidates.clear()
+            val sampleText = dialogBinding.ruleSampleInput.text?.toString().orEmpty()
+            val extracted = RuleGenerator.extractCandidates(sampleText)
+            val recommendedIds = RuleGenerator.extractCandidatesForGeneration(sampleText)
+                .map(RuleCandidate::id)
+                .toSet()
+            extractedCandidates += extracted.map { candidate ->
+                toDraft(candidate, checked = recommendedIds.contains(candidate.id))
+            }
+            renderTagChips(dialogBinding, extractedCandidates)
 
-            if (extractedTags.isEmpty()) {
+            if (extractedCandidates.isEmpty()) {
                 dialogBinding.ruleSampleLayout.error = getString(R.string.rule_generation_error)
             }
         }
 
         dialogBinding.ruleSampleInput.doAfterTextChanged {
-            extractedTags = emptyList()
+            extractedCandidates.clear()
             dialogBinding.ruleSampleLayout.error = null
-            dialogBinding.tagChipGroup.removeAllViews()
-            dialogBinding.tagHintText.visibility = View.VISIBLE
-            dialogBinding.tagScrollView.visibility = View.GONE
+            clearCandidateViews(dialogBinding)
         }
 
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 dialogBinding.ruleSampleLayout.error = null
-                if (extractedTags.isEmpty()) {
-                    extractedTags = RuleGenerator.extractTags(
-                        dialogBinding.ruleSampleInput.text?.toString().orEmpty(),
-                    )
-                    renderTagChips(dialogBinding, extractedTags)
-                }
-
-                val selectedTags = buildList {
-                    for (index in 0 until dialogBinding.tagChipGroup.childCount) {
-                        val chip = dialogBinding.tagChipGroup.getChildAt(index) as? Chip ?: continue
-                        if (chip.isChecked) add(chip.text.toString())
+                if (readCandidateDrafts(dialogBinding).isEmpty()) {
+                    extractedCandidates.clear()
+                    val sampleText = dialogBinding.ruleSampleInput.text?.toString().orEmpty()
+                    val extracted = RuleGenerator.extractCandidates(sampleText)
+                    val recommendedIds = RuleGenerator.extractCandidatesForGeneration(sampleText)
+                        .map(RuleCandidate::id)
+                        .toSet()
+                    extractedCandidates += extracted.map { candidate ->
+                        toDraft(candidate, checked = recommendedIds.contains(candidate.id))
                     }
+                    renderTagChips(dialogBinding, extractedCandidates)
                 }
 
                 val generatedRule = RuleGenerator.generate(
-                    dialogBinding.ruleNameInput.text?.toString().orEmpty(),
+                    "",
                     dialogBinding.ruleSampleInput.text?.toString().orEmpty(),
-                    selectedTags,
+                    buildSelectedCandidates(dialogBinding).also { selectedCandidates ->
+                        if (selectedCandidates.isEmpty()) {
+                            dialogBinding.ruleSampleLayout.error = getString(R.string.rule_generation_selection_error)
+                            return@setOnClickListener
+                        }
+                    },
                 )
 
                 if (generatedRule == null) {
@@ -320,20 +338,82 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun renderTagChips(dialogBinding: DialogAddRuleBinding, tags: List<String>) {
-        dialogBinding.tagChipGroup.removeAllViews()
-        dialogBinding.tagHintText.visibility = if (tags.isEmpty()) View.VISIBLE else View.GONE
-        dialogBinding.tagScrollView.visibility = if (tags.isEmpty()) View.GONE else View.VISIBLE
+    private fun renderTagChips(dialogBinding: DialogAddRuleBinding, candidates: List<RuleCandidateDraft>) {
+        dialogBinding.candidateContainer.removeAllViews()
+        dialogBinding.tagHintText.visibility = if (candidates.isEmpty()) View.VISIBLE else View.GONE
+        dialogBinding.tagScrollView.visibility = if (candidates.isEmpty()) View.GONE else View.VISIBLE
+        dialogBinding.tagSelectionHintText.visibility = if (candidates.isEmpty()) View.GONE else View.VISIBLE
 
-        tags.forEach { tag ->
-            val chip = Chip(this).apply {
-                text = tag
-                isCheckable = true
-                isChecked = true
-                isClickable = true
+        candidates.forEach { draft ->
+            val itemBinding = ItemRuleCandidateBinding.inflate(layoutInflater, dialogBinding.candidateContainer, false)
+            itemBinding.root.tag = draft
+            itemBinding.candidateCheckBox.isChecked = draft.checked
+            itemBinding.candidateInput.setText(draft.text)
+            applyCandidateCheckedState(itemBinding, draft.checked)
+            itemBinding.candidateCheckBox.setOnCheckedChangeListener { _, isChecked ->
+                applyCandidateCheckedState(itemBinding, isChecked)
             }
-            dialogBinding.tagChipGroup.addView(chip)
+            dialogBinding.candidateContainer.addView(itemBinding.root)
         }
+    }
+
+    private fun clearCandidateViews(dialogBinding: DialogAddRuleBinding) {
+        dialogBinding.candidateContainer.removeAllViews()
+        dialogBinding.tagHintText.visibility = View.VISIBLE
+        dialogBinding.tagSelectionHintText.visibility = View.GONE
+        dialogBinding.tagScrollView.visibility = View.GONE
+    }
+
+    private fun hideKeyboard(targetView: View) {
+        targetView.clearFocus()
+        val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        inputMethodManager?.hideSoftInputFromWindow(targetView.windowToken, 0)
+    }
+
+    private fun applyCandidateCheckedState(itemBinding: ItemRuleCandidateBinding, isChecked: Boolean) {
+        itemBinding.root.alpha = if (isChecked) 1f else 0.58f
+        itemBinding.candidateInputLayout.alpha = if (isChecked) 1f else 0.72f
+    }
+
+    private fun readCandidateDrafts(dialogBinding: DialogAddRuleBinding): List<RuleCandidateDraft> {
+        return buildList {
+            for (index in 0 until dialogBinding.candidateContainer.childCount) {
+                val child = dialogBinding.candidateContainer.getChildAt(index)
+                val itemBinding = ItemRuleCandidateBinding.bind(child)
+                val draft = child.tag as? RuleCandidateDraft ?: continue
+                val candidateText = itemBinding.candidateInput.text?.toString().orEmpty().trim()
+                if (candidateText.isBlank()) continue
+
+                add(
+                    draft.copy(
+                        text = candidateText,
+                        checked = itemBinding.candidateCheckBox.isChecked,
+                        type = RuleGenerator.inferCandidateType(candidateText),
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun buildSelectedCandidates(dialogBinding: DialogAddRuleBinding): List<RuleCandidate> {
+        return readCandidateDrafts(dialogBinding)
+            .filter(RuleCandidateDraft::checked)
+            .map { draft ->
+                RuleCandidate(
+                    text = draft.text,
+                    source = RuleCandidateSource.AUTO,
+                    type = draft.type,
+                )
+            }
+    }
+
+    private fun toDraft(candidate: RuleCandidate, checked: Boolean = true): RuleCandidateDraft {
+        return RuleCandidateDraft(
+            id = candidate.id,
+            text = candidate.text,
+            type = candidate.type,
+            checked = checked,
+        )
     }
 
     private fun hasPermission(permission: String): Boolean {

@@ -12,23 +12,9 @@
         android:paddingTop="8dp">
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/ruleNameLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/add_rule_name_hint">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/ruleNameInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textCapSentences" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/ruleSampleLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
             android:hint="@string/add_rule_sample_hint"
             app:helperText="@string/add_rule_helper">
 
@@ -57,6 +43,15 @@
             android:text="@string/tag_hint_text"
             android:textSize="13sp" />
 
+        <TextView
+            android:id="@+id/tagSelectionHintText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/tag_selection_hint_text"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
         <com.example.parkingalert.widget.MaxHeightNestedScrollView
             android:id="@+id/tagScrollView"
             android:layout_width="match_parent"
@@ -66,14 +61,11 @@
             android:scrollbars="vertical"
             android:visibility="gone">
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/tagChipGroup"
+            <LinearLayout
+                android:id="@+id/candidateContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:chipSpacingHorizontal="8dp"
-                app:chipSpacingVertical="8dp"
-                app:selectionRequired="false"
-                app:singleLine="false" />
+                android:orientation="vertical" />
         </com.example.parkingalert.widget.MaxHeightNestedScrollView>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
